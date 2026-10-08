@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_URL } from "../config/api";
 
@@ -12,8 +11,27 @@ function AdminOrders() {
     const [error, setError] = useState("");
 
     const [search, setSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
 
+    const [searchParams, setSearchParams] =
+        useSearchParams();
+
+    const validStatuses = [
+        "all",
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled"
+    ];
+
+    const urlStatus = searchParams.get("status");
+
+    const [statusFilter, setStatusFilter] = useState(
+        validStatuses.includes(urlStatus)
+            ? urlStatus
+            : "all"
+    );
 
     // =====================================================
     // FETCH ALL CUSTOMER ORDERS
@@ -44,7 +62,10 @@ function AdminOrders() {
 
             const data = await response.json();
 
-            console.log("Admin orders response:", data);
+            console.log(
+                "Admin orders response:",
+                data
+            );
 
             if (!response.ok) {
                 throw new Error(
@@ -77,7 +98,6 @@ function AdminOrders() {
         }
     };
 
-
     // =====================================================
     // LOAD ORDERS
     // =====================================================
@@ -94,6 +114,26 @@ function AdminOrders() {
         }
     }, [token]);
 
+    // =====================================================
+    // SYNC STATUS FILTER WITH URL
+    // =====================================================
+
+    useEffect(() => {
+        const status = searchParams.get("status");
+
+        if (validStatuses.includes(status)) {
+            setStatusFilter(status);
+        } else {
+            setStatusFilter("all");
+
+            if (status) {
+                setSearchParams({});
+            }
+        }
+    }, [
+        searchParams,
+        setSearchParams
+    ]);
 
     // =====================================================
     // ORDER STATUS
@@ -107,14 +147,15 @@ function AdminOrders() {
         ).toLowerCase();
     };
 
-
     // =====================================================
     // STATUS CLASS
     // =====================================================
 
     const getStatusClass = (status) => {
         const normalizedStatus =
-            String(status || "pending").toLowerCase();
+            String(
+                status || "pending"
+            ).toLowerCase();
 
         if (
             normalizedStatus === "confirmed" ||
@@ -123,11 +164,15 @@ function AdminOrders() {
             return "compact-status-confirmed";
         }
 
-        if (normalizedStatus === "shipped") {
+        if (
+            normalizedStatus === "shipped"
+        ) {
             return "compact-status-shipped";
         }
 
-        if (normalizedStatus === "delivered") {
+        if (
+            normalizedStatus === "delivered"
+        ) {
             return "compact-status-delivered";
         }
 
@@ -141,20 +186,25 @@ function AdminOrders() {
         return "compact-status-pending";
     };
 
-
     // =====================================================
     // STATUS ICON
     // =====================================================
 
     const getStatusIcon = (status) => {
         const normalizedStatus =
-            String(status || "pending").toLowerCase();
+            String(
+                status || "pending"
+            ).toLowerCase();
 
-        if (normalizedStatus === "delivered") {
+        if (
+            normalizedStatus === "delivered"
+        ) {
             return "✓";
         }
 
-        if (normalizedStatus === "shipped") {
+        if (
+            normalizedStatus === "shipped"
+        ) {
             return "↗";
         }
 
@@ -175,7 +225,6 @@ function AdminOrders() {
         return "◷";
     };
 
-
     // =====================================================
     // FORMAT STATUS
     // =====================================================
@@ -193,7 +242,6 @@ function AdminOrders() {
         );
     };
 
-
     // =====================================================
     // CUSTOMER
     // =====================================================
@@ -207,7 +255,6 @@ function AdminOrders() {
         );
     };
 
-
     const getCustomerEmail = (order) => {
         return (
             order.user?.email ||
@@ -216,7 +263,6 @@ function AdminOrders() {
         );
     };
 
-
     const getCustomerPhone = (order) => {
         return (
             order.user?.phone ||
@@ -224,7 +270,6 @@ function AdminOrders() {
             "Not available"
         );
     };
-
 
     // =====================================================
     // ORDER TOTAL
@@ -239,7 +284,6 @@ function AdminOrders() {
         );
     };
 
-
     // =====================================================
     // ITEM COUNT
     // =====================================================
@@ -249,7 +293,9 @@ function AdminOrders() {
             return order.items.reduce(
                 (total, item) =>
                     total +
-                    Number(item.quantity || 1),
+                    Number(
+                        item.quantity || 1
+                    ),
                 0
             );
         }
@@ -261,7 +307,6 @@ function AdminOrders() {
         );
     };
 
-
     // =====================================================
     // DATE
     // =====================================================
@@ -271,9 +316,14 @@ function AdminOrders() {
             return "—";
         }
 
-        const parsedDate = new Date(date);
+        const parsedDate =
+            new Date(date);
 
-        if (Number.isNaN(parsedDate.getTime())) {
+        if (
+            Number.isNaN(
+                parsedDate.getTime()
+            )
+        ) {
             return date;
         }
 
@@ -287,7 +337,6 @@ function AdminOrders() {
         );
     };
 
-
     // =====================================================
     // FILTER ORDERS
     // =====================================================
@@ -297,10 +346,10 @@ function AdminOrders() {
             search.toLowerCase().trim();
 
         return orders.filter((order) => {
-
             const orderId =
-                String(order._id || "")
-                    .toLowerCase();
+                String(
+                    order._id || ""
+                ).toLowerCase();
 
             const customerName =
                 String(
@@ -326,44 +375,50 @@ function AdminOrders() {
 
             const matchesSearch =
                 !searchText ||
-                orderId.includes(searchText) ||
-                customerName.includes(searchText) ||
-                customerEmail.includes(searchText) ||
-                customerPhone.includes(searchText);
+                orderId.includes(
+                    searchText
+                ) ||
+                customerName.includes(
+                    searchText
+                ) ||
+                customerEmail.includes(
+                    searchText
+                ) ||
+                customerPhone.includes(
+                    searchText
+                );
 
             const currentStatus =
                 getOrderStatus(order);
 
-
             let matchesStatus = true;
 
-
-            if (statusFilter === "confirmed") {
-
+            if (
+                statusFilter === "confirmed"
+            ) {
                 matchesStatus =
-                    currentStatus === "confirmed" ||
-                    currentStatus === "processing";
-
-            } else if (statusFilter !== "all") {
-
+                    currentStatus ===
+                        "confirmed" ||
+                    currentStatus ===
+                        "processing";
+            } else if (
+                statusFilter !== "all"
+            ) {
                 matchesStatus =
-                    currentStatus === statusFilter;
-
+                    currentStatus ===
+                    statusFilter;
             }
-
 
             return (
                 matchesSearch &&
                 matchesStatus
             );
         });
-
     }, [
         orders,
         search,
         statusFilter
     ]);
-
 
     // =====================================================
     // SUMMARY COUNTS
@@ -372,40 +427,48 @@ function AdminOrders() {
     const pendingCount =
         orders.filter(
             (order) =>
-                getOrderStatus(order) === "pending"
+                getOrderStatus(order) ===
+                "pending"
         ).length;
-
 
     const confirmedCount =
         orders.filter(
             (order) =>
-                getOrderStatus(order) === "confirmed" ||
-                getOrderStatus(order) === "processing"
+                getOrderStatus(order) ===
+                    "confirmed" ||
+                getOrderStatus(order) ===
+                    "processing"
         ).length;
-
 
     const shippedCount =
         orders.filter(
             (order) =>
-                getOrderStatus(order) === "shipped"
+                getOrderStatus(order) ===
+                "shipped"
         ).length;
-
 
     const deliveredCount =
         orders.filter(
             (order) =>
-                getOrderStatus(order) === "delivered"
+                getOrderStatus(order) ===
+                "delivered"
         ).length;
 
-
     // =====================================================
-    // FILTER CLICK
+    // STATUS FILTER + URL
     // =====================================================
 
     const handleStatusFilter = (status) => {
         setStatusFilter(status);
-    };
 
+        if (status === "all") {
+            setSearchParams({});
+        } else {
+            setSearchParams({
+                status: status
+            });
+        }
+    };
 
     // =====================================================
     // LOADING
@@ -414,9 +477,7 @@ function AdminOrders() {
     if (loading) {
         return (
             <div className="admin-orders-page">
-
                 <div className="admin-orders-loading">
-
                     <div className="loading-spinner"></div>
 
                     <h2>
@@ -426,13 +487,10 @@ function AdminOrders() {
                     <p>
                         Please wait while we fetch the latest orders.
                     </p>
-
                 </div>
-
             </div>
         );
     }
-
 
     // =====================================================
     // ERROR
@@ -441,7 +499,6 @@ function AdminOrders() {
     if (error) {
         return (
             <div className="admin-orders-page">
-
                 <div className="admin-orders-error">
 
                     <div className="error-icon">
@@ -465,11 +522,9 @@ function AdminOrders() {
                     </button>
 
                 </div>
-
             </div>
         );
     }
-
 
     // =====================================================
     // MAIN PAGE
@@ -478,10 +533,7 @@ function AdminOrders() {
     return (
         <div className="admin-orders-page compact-admin-orders">
 
-
-            {/* =================================================
-                HEADER
-            ================================================= */}
+            {/* HEADER */}
 
             <section className="admin-orders-header">
 
@@ -501,7 +553,6 @@ function AdminOrders() {
 
                 </div>
 
-
                 <div className="orders-header-count">
 
                     <strong>
@@ -516,13 +567,9 @@ function AdminOrders() {
 
             </section>
 
-
-            {/* =================================================
-                SUMMARY CARDS
-            ================================================= */}
+            {/* SUMMARY CARDS */}
 
             <section className="compact-order-summary">
-
 
                 {/* TOTAL */}
 
@@ -556,7 +603,6 @@ function AdminOrders() {
 
                 </button>
 
-
                 {/* PENDING */}
 
                 <button
@@ -588,7 +634,6 @@ function AdminOrders() {
                     </div>
 
                 </button>
-
 
                 {/* CONFIRMED */}
 
@@ -622,7 +667,6 @@ function AdminOrders() {
 
                 </button>
 
-
                 {/* SHIPPED */}
 
                 <button
@@ -654,7 +698,6 @@ function AdminOrders() {
                     </div>
 
                 </button>
-
 
                 {/* DELIVERED */}
 
@@ -690,10 +733,7 @@ function AdminOrders() {
 
             </section>
 
-
-            {/* =================================================
-                SEARCH + STATUS
-            ================================================= */}
+            {/* SEARCH + STATUS */}
 
             <section className="compact-orders-toolbar">
 
@@ -716,16 +756,16 @@ function AdminOrders() {
 
                     </svg>
 
-
                     <input
                         type="text"
                         value={search}
                         onChange={(e) =>
-                            setSearch(e.target.value)
+                            setSearch(
+                                e.target.value
+                            )
                         }
                         placeholder="Search by order ID, customer, email or phone..."
                     />
-
 
                     {search && (
                         <button
@@ -741,7 +781,6 @@ function AdminOrders() {
 
                 </div>
 
-
                 <div className="compact-status-filter">
 
                     <label>
@@ -751,7 +790,7 @@ function AdminOrders() {
                     <select
                         value={statusFilter}
                         onChange={(e) =>
-                            setStatusFilter(
+                            handleStatusFilter(
                                 e.target.value
                             )
                         }
@@ -787,10 +826,7 @@ function AdminOrders() {
 
             </section>
 
-
-            {/* =================================================
-                RESULTS HEADER
-            ================================================= */}
+            {/* RESULTS HEADER */}
 
             <div className="compact-orders-results">
 
@@ -812,12 +848,11 @@ function AdminOrders() {
 
                 </div>
 
-
                 {statusFilter !== "all" && (
                     <button
                         type="button"
                         onClick={() =>
-                            setStatusFilter("all")
+                            handleStatusFilter("all")
                         }
                     >
                         Clear status
@@ -826,10 +861,7 @@ function AdminOrders() {
 
             </div>
 
-
-            {/* =================================================
-                ORDER LIST
-            ================================================= */}
+            {/* ORDER LIST */}
 
             {filteredOrders.length === 0 ? (
 
@@ -852,7 +884,6 @@ function AdminOrders() {
             ) : (
 
                 <section className="compact-orders-table">
-
 
                     {/* TABLE HEADER */}
 
@@ -892,177 +923,173 @@ function AdminOrders() {
 
                     </div>
 
-
                     {/* TABLE ROWS */}
 
-                    {filteredOrders.map((order) => {
+                    {filteredOrders.map(
+                        (order) => {
 
-                        const status =
-                            getOrderStatus(order);
+                            const status =
+                                getOrderStatus(
+                                    order
+                                );
 
-                        return (
+                            return (
+                                <div
+                                    key={order._id}
+                                    className="compact-table-row"
+                                >
 
-                            <div
-                                key={order._id}
-                                className="compact-table-row"
-                            >
+                                    {/* ORDER ID */}
 
+                                    <div className="compact-order-id">
 
-                                {/* ORDER ID */}
+                                        <div className="compact-order-icon">
 
-                                <div className="compact-order-id">
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                            >
 
-                                    <div className="compact-order-icon">
+                                                <path d="M6 3h12v18H6z" />
 
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.8"
-                                        >
+                                                <path d="M9 8h6" />
 
-                                            <path d="M6 3h12v18H6z" />
+                                                <path d="M9 12h6" />
 
-                                            <path d="M9 8h6" />
+                                                <path d="M9 16h4" />
 
-                                            <path d="M9 12h6" />
+                                            </svg>
 
-                                            <path d="M9 16h4" />
+                                        </div>
 
-                                        </svg>
+                                        <strong>
+                                            #
+                                            {String(
+                                                order._id || ""
+                                            ).slice(-10)}
+                                        </strong>
 
                                     </div>
 
-                                    <strong>
-                                        #
-                                        {String(
-                                            order._id || ""
-                                        ).slice(-10)}
-                                    </strong>
+                                    {/* STATUS */}
 
-                                </div>
+                                    <div>
 
+                                        <span
+                                            className={`compact-status-badge ${getStatusClass(
+                                                status
+                                            )}`}
+                                        >
 
-                                {/* STATUS */}
+                                            <span>
+                                                {getStatusIcon(
+                                                    status
+                                                )}
+                                            </span>
 
-                                <div>
+                                            {formatStatus(
+                                                status
+                                            )}
 
-                                    <span
-                                        className={`compact-status-badge ${getStatusClass(
-                                            status
-                                        )}`}
-                                    >
+                                        </span>
+
+                                    </div>
+
+                                    {/* CUSTOMER */}
+
+                                    <div className="compact-customer">
+
+                                        <strong>
+                                            {getCustomerName(
+                                                order
+                                            )}
+                                        </strong>
 
                                         <span>
-                                            {getStatusIcon(
-                                                status
+                                            {getCustomerEmail(
+                                                order
                                             )}
                                         </span>
 
-                                        {formatStatus(
-                                            status
-                                        )}
+                                    </div>
 
-                                    </span>
+                                    {/* PHONE */}
 
-                                </div>
-
-
-                                {/* CUSTOMER */}
-
-                                <div className="compact-customer">
-
-                                    <strong>
-                                        {getCustomerName(
+                                    <div className="compact-phone">
+                                        {getCustomerPhone(
                                             order
                                         )}
-                                    </strong>
+                                    </div>
 
-                                    <span>
-                                        {getCustomerEmail(
+                                    {/* DATE */}
+
+                                    <div className="compact-date">
+
+                                        {formatDate(
+                                            order.createdAt ||
+                                            order.orderDate ||
+                                            order.date
+                                        )}
+
+                                    </div>
+
+                                    {/* ITEMS */}
+
+                                    <div className="compact-items">
+
+                                        {getItemCount(
                                             order
                                         )}
-                                    </span>
 
-                                </div>
+                                    </div>
 
+                                    {/* TOTAL */}
 
-                                {/* PHONE */}
+                                    <div className="compact-total">
 
-                                <div className="compact-phone">
+                                        ₹
+                                        {getOrderTotal(
+                                            order
+                                        ).toLocaleString(
+                                            "en-IN"
+                                        )}
 
-                                    {getCustomerPhone(
-                                        order
-                                    )}
+                                    </div>
 
-                                </div>
+                                    {/* VIEW DETAILS */}
 
+                                    <div>
 
-                                {/* DATE */}
-
-                                <div className="compact-date">
-
-                                    {formatDate(
-                                        order.createdAt ||
-                                        order.orderDate ||
-                                        order.date
-                                    )}
-
-                                </div>
-
-
-                                {/* ITEMS */}
-
-                                <div className="compact-items">
-
-                                    {getItemCount(
-                                        order
-                                    )}
-
-                                </div>
-
-
-                                {/* TOTAL */}
-
-                                <div className="compact-total">
-
-                                    ₹
-                                    {getOrderTotal(
-                                        order
-                                    ).toLocaleString(
-                                        "en-IN"
-                                    )}
-
-                                </div>
-
-
-                                {/* VIEW DETAILS */}
-
-                                <div>
-
-                                    <Link
-                                        to={`/admin/orders/${order._id}`}
-                                        className="compact-view-button"
-                                    >
-                                        View Details
-
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
+                                        <Link
+                                            to={`/admin/orders/${order._id}`}
+                                            className="compact-view-button"
                                         >
-                                            <path d="M5 12h14" />
-                                            <path d="m13 6 6 6-6 6" />
-                                        </svg>
-                                    </Link>
+
+                                            View Details
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                            >
+
+                                                <path d="M5 12h14" />
+
+                                                <path d="m13 6 6 6-6 6" />
+
+                                            </svg>
+
+                                        </Link>
+
+                                    </div>
 
                                 </div>
-
-                            </div>
-
-                        );
-                    })}
+                            );
+                        }
+                    )}
 
                 </section>
             )}

@@ -316,7 +316,7 @@ function AdminDashboard() {
 
                         <h1>
                             Welcome back,{" "}
-                            <span>{adminName}</span>
+                            <span>{adminName.toUpperCase().charAt(0) + adminName.toLowerCase().slice(1)}</span>
                         </h1>
 
                         <p>
