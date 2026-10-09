@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -34,9 +33,7 @@ function Navbar() {
 
     return (
         <>
-            {/* ================================
-                TOP NAVBAR
-            ================================= */}
+            {/* TOP NAVBAR */}
             <nav className="navbar">
                 <Link
                     to="/home"
@@ -64,7 +61,7 @@ function Navbar() {
                     </span>
                 </Link>
 
-                {/* Mobile hamburger */}
+                {/* MOBILE HAMBURGER */}
                 <button
                     type="button"
                     className="navbar-menu-toggle"
@@ -105,7 +102,7 @@ function Navbar() {
                     )}
                 </button>
 
-                {/* Desktop links / Mobile dropdown */}
+                {/* DESKTOP LINKS / MOBILE DROPDOWN */}
                 <div
                     id="products-hub-navigation"
                     className={`navbar-links ${
@@ -232,9 +229,7 @@ function Navbar() {
                 </div>
             </nav>
 
-            {/* ================================
-                MOBILE FIXED BOTTOM NAVIGATION
-            ================================= */}
+            {/* MOBILE FIXED BOTTOM NAVIGATION */}
             <nav
                 className="mobile-bottom-nav"
                 aria-label="Mobile navigation"
