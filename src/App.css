@@ -43,8 +43,9 @@ a {
 
 
 
+
 /* =========================================
-   PRODUCTSHUB - RESPONSIVE PURPLE NAVBAR
+   PRODUCTSHUB - PREMIUM PURPLE NAVBAR
 ========================================= */
 
 .navbar {
@@ -58,6 +59,7 @@ a {
     padding: 14px 5%;
 
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 28px;
@@ -67,14 +69,20 @@ a {
 
     border-bottom: 1px solid #6D28D9;
     box-shadow: 0 8px 30px rgba(46, 16, 101, 0.25);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
 }
 
-/* BRAND */
+/* =========================================
+   BRAND / LOGO
+========================================= */
 
 .navbar-brand {
     display: inline-flex;
     align-items: center;
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    min-width: 0;
     gap: 12px;
 
     color: #FFFFFF;
@@ -94,7 +102,10 @@ a {
     border-radius: 14px;
 
     box-shadow: 0 5px 18px rgba(0, 0, 0, 0.15);
-    transition: transform 0.25s ease;
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
 }
 
 .navbar-brand-icon svg {
@@ -104,10 +115,12 @@ a {
 
 .navbar-brand:hover .navbar-brand-icon {
     transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
 }
 
 .navbar-brand-text {
     color: #FFFFFF;
+
     font-size: 27px;
     font-weight: 850;
     letter-spacing: -1.1px;
@@ -118,14 +131,17 @@ a {
     color: #E9D5FF;
 }
 
-/* MOBILE MENU TOGGLE */
+/* =========================================
+   MOBILE MENU BUTTON
+========================================= */
 
 .navbar-menu-toggle {
     display: none;
 
     width: 44px;
     height: 44px;
-    flex-shrink: 0;
+    padding: 0;
+    flex: 0 0 44px;
 
     align-items: center;
     justify-content: center;
@@ -144,6 +160,7 @@ a {
 }
 
 .navbar-menu-toggle svg {
+    display: block;
     width: 24px;
     height: 24px;
 }
@@ -161,13 +178,17 @@ a {
     outline-offset: 3px;
 }
 
-/* DESKTOP NAVIGATION */
+/* =========================================
+   DESKTOP NAVIGATION
+========================================= */
 
 .navbar-links {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
+
     min-width: 0;
 }
 
@@ -189,10 +210,12 @@ a {
 
     font-size: 14px;
     font-weight: 650;
+
     text-decoration: none;
     white-space: nowrap;
 
     transition:
+        color 0.2s ease,
         background 0.2s ease,
         border-color 0.2s ease,
         transform 0.2s ease;
@@ -226,7 +249,9 @@ a {
     transform: translateX(-50%);
 }
 
-/* CART BADGE */
+/* =========================================
+   CART BADGE
+========================================= */
 
 .navbar-cart-link {
     gap: 8px;
@@ -250,7 +275,9 @@ a {
     font-weight: 800;
 }
 
-/* ACCOUNT */
+/* =========================================
+   USER ACCOUNT
+========================================= */
 
 .navbar-account {
     display: flex;
@@ -263,8 +290,18 @@ a {
     padding: 7px 12px;
 
     background: rgba(255, 255, 255, 0.09);
+
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.navbar-account:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .navbar-account-avatar {
@@ -287,6 +324,7 @@ a {
     display: flex;
     flex-direction: column;
     gap: 3px;
+
     min-width: 0;
 }
 
@@ -303,12 +341,15 @@ a {
 
 .navbar-account-role {
     color: #E9D5FF;
+
     font-size: 11px;
     font-weight: 500;
     white-space: nowrap;
 }
 
-/* LOGOUT */
+/* =========================================
+   LOGOUT BUTTON
+========================================= */
 
 .navbar-logout {
     min-height: 42px;
@@ -334,14 +375,16 @@ a {
     cursor: pointer;
 
     transition:
-        background 0.2s ease,
         color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
         transform 0.2s ease;
 }
 
 .navbar-logout svg {
     width: 17px;
     height: 17px;
+    flex-shrink: 0;
 }
 
 .navbar-logout:hover {
@@ -351,31 +394,54 @@ a {
     transform: translateY(-1px);
 }
 
-.navbar-logout:focus-visible,
+.navbar-logout:active {
+    transform: translateY(0);
+}
+
+/* =========================================
+   KEYBOARD ACCESSIBILITY
+========================================= */
+
 .navbar-link:focus-visible,
-.navbar-brand:focus-visible {
+.navbar-brand:focus-visible,
+.navbar-logout:focus-visible {
     outline: 2px solid #FFFFFF;
     outline-offset: 3px;
 }
 
 /* =========================================
-   TABLET AND MOBILE MENU
+   TABLET AND MOBILE NAVIGATION
+   Logo LEFT, menu button RIGHT
 ========================================= */
 
 @media (max-width: 900px) {
     .navbar {
         position: sticky;
         top: 0;
+        z-index: 1000;
 
+        width: 100%;
         min-height: 72px;
-        padding: 12px 5%;
+        box-sizing: border-box;
 
+        display: flex;
+        flex-direction: row;
         flex-wrap: nowrap;
+        align-items: center;
         justify-content: space-between;
+
+        padding: 12px 5%;
         gap: 12px;
+
+        background: #4C1D95;
     }
 
+    /* Brand stays on the left */
     .navbar-brand {
+        display: inline-flex;
+        align-items: center;
+
+        flex: 0 1 auto;
         min-width: 0;
         gap: 9px;
     }
@@ -383,6 +449,7 @@ a {
     .navbar-brand-icon {
         width: 40px;
         height: 40px;
+        flex-shrink: 0;
         border-radius: 12px;
     }
 
@@ -392,16 +459,30 @@ a {
     }
 
     .navbar-brand-text {
-        font-size: clamp(20px, 4vw, 25px);
+        font-size: clamp(19px, 4.5vw, 25px);
         letter-spacing: -0.7px;
+        white-space: nowrap;
     }
 
-    /* Show the menu button at the top right */
+    /* Menu button remains on the SAME ROW */
     .navbar-menu-toggle {
         display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+
+        margin-left: auto;
     }
 
-    /* Closed menu */
+    /*
+       Closed by default.
+       Absolute positioning prevents the menu
+       from pushing the logo or menu button.
+    */
     .navbar-links {
         display: none;
 
@@ -412,66 +493,89 @@ a {
 
         width: 100%;
         max-height: calc(100vh - 72px);
+        max-height: calc(100dvh - 72px);
+
         overflow-y: auto;
+        overscroll-behavior: contain;
         box-sizing: border-box;
 
         padding: 14px 5% 20px;
 
         flex-direction: column;
+        flex-wrap: nowrap;
         align-items: stretch;
         justify-content: flex-start;
         gap: 6px;
 
         background: #4C1D95;
+
         border-top: 1px solid rgba(255, 255, 255, 0.15);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 
         box-shadow: 0 14px 24px rgba(30, 10, 65, 0.25);
     }
 
-    /* Open menu */
+    /* Visible only after clicking the menu button */
     .navbar-links.mobile-open {
         display: flex;
-        animation: navbar-menu-appear 0.2s ease-out;
     }
 
+    /* Full-width mobile navigation items */
     .navbar-link {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+
         width: 100%;
         min-height: 46px;
         box-sizing: border-box;
-        justify-content: flex-start;
 
         padding: 0 14px;
-        border-radius: 9px;
 
+        color: #FFFFFF;
         font-size: 14px;
+
+        border-radius: 9px;
+    }
+
+    .navbar-link:hover {
+        background: rgba(255, 255, 255, 0.12);
     }
 
     .navbar-link.active::after {
         left: auto;
-        right: 13px;
+        right: 14px;
         bottom: 50%;
 
         width: 6px;
         height: 6px;
 
+        background: #FFFFFF;
         border-radius: 50%;
+
         transform: translateY(50%);
     }
 
+    /* Keep cart count beside Cart */
     .navbar-cart-link {
         justify-content: flex-start;
+        gap: 8px;
     }
 
-    /* Account becomes a full-width menu row */
+    /* Account details inside the menu */
     .navbar-account {
+        display: flex;
+        align-items: center;
+
         width: 100%;
         max-width: none;
+        min-width: 0;
         box-sizing: border-box;
 
         margin: 8px 0 4px;
         padding: 12px;
 
+        background: rgba(255, 255, 255, 0.09);
         border-radius: 10px;
     }
 
@@ -492,39 +596,31 @@ a {
         font-size: 12px;
     }
 
-    /* Full-width logout */
+    /* Full-width logout inside the menu */
     .navbar-logout {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
         width: 100%;
         min-height: 44px;
         box-sizing: border-box;
 
-        justify-content: center;
         margin-top: 4px;
 
+        color: #FFFFFF;
         font-size: 14px;
     }
 }
 
-@keyframes navbar-menu-appear {
-    from {
-        opacity: 0;
-        transform: translateY(-6px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* =========================================
-   SMALL MOBILE SCREENS
+   EXTRA-SMALL MOBILE SCREENS
 ========================================= */
 
 @media (max-width: 380px) {
     .navbar {
-        padding-right: 4%;
-        padding-left: 4%;
+        padding-right: 12px;
+        padding-left: 12px;
         gap: 8px;
     }
 
@@ -533,7 +629,8 @@ a {
     }
 
     .navbar-brand-text {
-        font-size: 20px;
+        font-size: 19px;
+        letter-spacing: -0.6px;
     }
 
     .navbar-brand-icon {
@@ -544,15 +641,18 @@ a {
     .navbar-menu-toggle {
         width: 40px;
         height: 40px;
+        flex-basis: 40px;
     }
 
     .navbar-links {
-        padding-right: 4%;
-        padding-left: 4%;
+        padding-right: 12px;
+        padding-left: 12px;
     }
 }
 
-/* Reduced motion accessibility */
+/* =========================================
+   REDUCED MOTION ACCESSIBILITY
+========================================= */
 
 @media (prefers-reduced-motion: reduce) {
     .navbar *,
