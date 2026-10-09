@@ -74,6 +74,42 @@ function Home() {
       </section>
 
 
+
+      {/* =====================================================
+          SHOPPING SECTION
+      ====================================================== */}
+
+      <section className="home-shopping">
+
+        <div className="home-section-heading">
+
+          <span>
+            SHOP WITH CONFIDENCE
+          </span>
+
+          <h2>
+            Your Favorite Products,
+            <br />
+            Just a Click Away
+          </h2>
+
+          <p>
+            Browse our collection and discover
+            products made for your everyday needs.
+          </p>
+
+          <Link
+            to="/products"
+            className="home-browse-button"
+          >
+            Browse Products →
+          </Link>
+
+        </div>
+
+      </section>
+
+
       {/* =====================================================
           FEATURES
       ====================================================== */}
@@ -150,39 +186,7 @@ function Home() {
       </section>
 
 
-      {/* =====================================================
-          SHOPPING SECTION
-      ====================================================== */}
-
-      <section className="home-shopping">
-
-        <div className="home-section-heading">
-
-          <span>
-            SHOP WITH CONFIDENCE
-          </span>
-
-          <h2>
-            Your Favorite Products,
-            <br />
-            Just a Click Away
-          </h2>
-
-          <p>
-            Browse our collection and discover
-            products made for your everyday needs.
-          </p>
-
-          <Link
-            to="/products"
-            className="home-browse-button"
-          >
-            Browse Products →
-          </Link>
-
-        </div>
-
-      </section>
+      
 
     </div>
   );
