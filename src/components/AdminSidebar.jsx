@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
     NavLink,
@@ -6,328 +7,237 @@ import {
 } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-
 function AdminSidebar() {
-
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout } = useAuth();
 
+    // Sidebar state
+    const [expanded, setExpanded] = useState(false);
 
-    /* =========================================
-       SIDEBAR STATE
-    ========================================= */
+    // Load the saved display name, without changing the login email
+    const [displayName, setDisplayName] = useState(
+        () => localStorage.getItem("adminDisplayName") || "Admin"
+    );
 
-    const [expanded, setExpanded] =
-        useState(false);
+    // Name editing state
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [editedName, setEditedName] = useState(displayName);
 
-
-    /* =========================================
-       CURRENT USER
-       
-       We don't use Context here because
-       your current project does not have
-       ../context/Context.
-    ========================================= */
-
-    const storedUser =
-        localStorage.getItem("currentUser");
-
-    let currentUser = null;
-
-    try {
-
-        currentUser = storedUser
-            ? JSON.parse(storedUser)
-            : null;
-
-    } catch {
-
-        currentUser = null;
-
-    }
-
-
-    /* =========================================
-       AUTO EXPAND FOR ADMIN SUB-PAGES
-    ========================================= */
-
+    // Admin sub-pages
     const isAdminSubPage =
-        location.pathname.startsWith(
-            "/admin/products"
-        ) ||
-        location.pathname.startsWith(
-            "/admin/categories"
-        ) ||
-        location.pathname.startsWith(
-            "/admin/orders"
-        );
+        location.pathname.startsWith("/admin/products") ||
+        location.pathname.startsWith("/admin/categories") ||
+        location.pathname.startsWith("/admin/orders");
 
-
-    /* =========================================
-       DASHBOARD CLICK
-    ========================================= */
-
+    // Dashboard
     const handleDashboard = () => {
-
         setExpanded(true);
-
         navigate("/admin/dashboard");
     };
 
+    // Open name editor
+    const handleEditName = () => {
+        setEditedName(displayName);
+        setIsEditingName(true);
+    };
 
-    /* =========================================
-       LOGOUT
-    ========================================= */
+    // Save the new display name
+    const handleSaveName = () => {
+        const trimmedName = editedName.trim();
 
+        if (!trimmedName) {
+            return;
+        }
+
+        localStorage.setItem("adminDisplayName", trimmedName);
+        setDisplayName(trimmedName);
+        setIsEditingName(false);
+    };
+
+    // Cancel editing
+    const handleCancelName = () => {
+        setEditedName(displayName);
+        setIsEditingName(false);
+    };
+
+    // Keyboard shortcuts
+    const handleNameKeyDown = (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handleSaveName();
+        }
+
+        if (event.key === "Escape") {
+            handleCancelName();
+        }
+    };
+
+    // Logout
     const handleLogout = () => {
+        logout();
 
-    logout();
+        navigate("/home", {
+            replace: true
+        });
+    };
 
-    navigate("/home", {
-        replace: true
-    });
-};
-
-
-    /* =========================================
-       USER INITIAL
-    ========================================= */
-
-    const initial =
-        currentUser?.email
-            ?.charAt(0)
-            ?.toUpperCase() || "A";
-
+    // Avatar initial follows the display name
+    const initial = displayName.charAt(0).toUpperCase();
 
     return (
-
         <aside
-            className={`
-                admin-sidebar
-                ${
-                    expanded || isAdminSubPage
-                        ? "admin-sidebar-expanded"
-                        : ""
-                }
-            `}
+            className={`admin-sidebar ${
+                expanded || isAdminSubPage
+                    ? "admin-sidebar-expanded"
+                    : ""
+            }`}
         >
-
-
-            {/* =================================
-                LOGO
-            ================================= */}
-
+            {/* Logo */}
             <div className="admin-sidebar-logo">
-
                 <div className="admin-logo-icon">
                     🛍
                 </div>
 
-
                 <div className="admin-logo-text">
-
-                    <strong>
-                        ProductsHub
-                    </strong>
-
-                    <span>
-                        Admin Panel
-                    </span>
-
+                    <strong>ProductsHub</strong>
+                    <span>Admin Panel</span>
                 </div>
-
             </div>
 
-
-            {/* =================================
-                NAVIGATION
-            ================================= */}
-
+            {/* Navigation */}
             <div className="admin-sidebar-nav">
-
-
-                {/* =============================
-                    DASHBOARD
-                ============================= */}
-
                 <button
                     type="button"
-                    className={`
-                        admin-sidebar-dashboard
-                        ${
-                            location.pathname ===
-                                "/admin" ||
-                            location.pathname ===
-                                "/admin/dashboard"
-                                ? "active"
-                                : ""
-                        }
-                    `}
+                    className={`admin-sidebar-dashboard ${
+                        location.pathname === "/admin" ||
+                        location.pathname === "/admin/dashboard"
+                            ? "active"
+                            : ""
+                    }`}
                     onClick={handleDashboard}
                 >
-
-                    <span className="admin-sidebar-icon">
-                        ⌂
-                    </span>
-
-
+                    <span className="admin-sidebar-icon">⌂</span>
                     <span className="admin-sidebar-text">
                         Dashboard
                     </span>
-
                 </button>
 
-
-                {/* =============================
-                    OTHER MENU ITEMS
-                ============================= */}
-
                 <div
-                    className={`
-                        admin-sidebar-menu
-                        ${
-                            expanded ||
-                            isAdminSubPage
-                                ? "admin-menu-visible"
-                                : ""
-                        }
-                    `}
+                    className={`admin-sidebar-menu ${
+                        expanded || isAdminSubPage
+                            ? "admin-menu-visible"
+                            : ""
+                    }`}
                 >
-
-
-                    {/* PRODUCTS */}
-
-                    <NavLink
-                        to="/admin/products"
-                        className={({ isActive }) =>
-                            isActive
-                                ? "active"
-                                : ""
-                        }
-                    >
-
+                    <NavLink to="/admin/products">
                         <span className="admin-sidebar-icon">
                             ◆
                         </span>
-
-
                         <span className="admin-sidebar-text">
                             Products
                         </span>
-
                     </NavLink>
 
-
-                    {/* CATEGORIES */}
-
-                    <NavLink
-                        to="/admin/categories"
-                        className={({ isActive }) =>
-                            isActive
-                                ? "active"
-                                : ""
-                        }
-                    >
-
+                    <NavLink to="/admin/categories">
                         <span className="admin-sidebar-icon">
                             ▦
                         </span>
-
-
                         <span className="admin-sidebar-text">
                             Categories
                         </span>
-
                     </NavLink>
 
-
-                    {/* ORDERS */}
-
-                    <NavLink
-                        to="/admin/orders"
-                        className={({ isActive }) =>
-                            isActive
-                                ? "active"
-                                : ""
-                        }
-                    >
-
+                    <NavLink to="/admin/orders">
                         <span className="admin-sidebar-icon">
                             🛒
                         </span>
-
-
                         <span className="admin-sidebar-text">
                             Orders
                         </span>
-
                     </NavLink>
-
                 </div>
-
             </div>
 
-
-            {/* =================================
-                BOTTOM SECTION
-            ================================= */}
-
+            {/* Bottom section */}
             <div className="admin-sidebar-bottom">
-
-
-                {/* USER */}
-
                 <div className="admin-sidebar-user">
-
                     <div className="admin-user-avatar">
                         {initial}
                     </div>
 
-
                     <div className="admin-user-info">
+                        {isEditingName ? (
+                            <div className="admin-name-editor">
+                                <input
+                                    type="text"
+                                    className="admin-user-name-input"
+                                    value={editedName}
+                                    onChange={(event) =>
+                                        setEditedName(event.target.value)
+                                    }
+                                    onKeyDown={handleNameKeyDown}
+                                    placeholder="Enter your name"
+                                    aria-label="Edit display name"
+                                    autoFocus
+                                    maxLength={60}
+                                />
 
-                        <strong>
-                            Admin
-                        </strong>
+                                <div className="admin-name-actions">
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveName}
+                                        disabled={!editedName.trim()}
+                                        className="admin-name-save"
+                                    >
+                                        Save
+                                    </button>
 
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelName}
+                                        className="admin-name-cancel"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                className="admin-user-name"
+                                onClick={handleEditName}
+                                title="Click to edit your name"
+                                aria-label="Edit your display name"
+                            >
+                                <strong>{displayName}</strong>
+                                <span className="admin-name-edit-icon">
+                                    ✎
+                                </span>
+                            </button>
+                        )}
 
-                        <span>
-                            {
-                                currentUser?.email ||
-                                "admin@gmail.com"
-                            }
+                        {/* Existing login email remains unchanged */}
+                        <span className="admin-user-email">
+                            {user?.email}
                         </span>
-
                     </div>
-
                 </div>
 
-
-                {/* LOGOUT */}
-
+                {/* Logout */}
                 <button
                     type="button"
                     className="admin-sidebar-logout"
                     onClick={handleLogout}
                 >
-
-                    <span className="admin-sidebar-icon">
-                        ↪
-                    </span>
-
-
+                    <span className="admin-sidebar-icon">↪</span>
                     <span className="admin-sidebar-text">
                         Logout
                     </span>
-
                 </button>
-
             </div>
-
         </aside>
     );
 }
-
 
 export default AdminSidebar;
