@@ -1,22 +1,38 @@
 
+import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+
 
 function Navbar() {
     const { cartCount } = useCart();
     const { user, isLoggedIn, logout } = useAuth();
     const navigate = useNavigate();
 
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const closeMenu = () => {
+        setIsMobileMenuOpen(false);
+    };
+
     const handleLogout = () => {
+        closeMenu();
         logout();
         navigate("/home");
     };
 
+    const getLinkClass = ({ isActive }) =>
+        `navbar-link ${isActive ? "active" : ""}`;
+
     return (
         <nav className="navbar">
             {/* Brand */}
-            <Link to="/home" className="navbar-brand">
+            <Link
+                to="/home"
+                className="navbar-brand"
+                onClick={closeMenu}
+            >
                 <span className="navbar-brand-icon">
                     <svg
                         viewBox="0 0 24 24"
@@ -38,13 +54,56 @@ function Navbar() {
                 </span>
             </Link>
 
-            {/* Navigation */}
-            <div className="navbar-links">
+            {/* Mobile menu button */}
+            <button
+                type="button"
+                className="navbar-menu-toggle"
+                onClick={() => setIsMobileMenuOpen((open) => !open)}
+                aria-label={
+                    isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+                }
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="products-hub-navigation"
+            >
+                {isMobileMenuOpen ? (
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                    </svg>
+                ) : (
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M4 6h16" />
+                        <path d="M4 12h16" />
+                        <path d="M4 18h16" />
+                    </svg>
+                )}
+            </button>
+
+            {/* Navigation menu */}
+            <div
+                id="products-hub-navigation"
+                className={`navbar-links ${
+                    isMobileMenuOpen ? "mobile-open" : ""
+                }`}
+            >
                 <NavLink
                     to="/home"
-                    className={({ isActive }) =>
-                        `navbar-link ${isActive ? "active" : ""}`
-                    }
+                    className={getLinkClass}
+                    onClick={closeMenu}
                 >
                     Home
                 </NavLink>
@@ -53,18 +112,16 @@ function Navbar() {
                     <>
                         <NavLink
                             to="/login"
-                            className={({ isActive }) =>
-                                `navbar-link ${isActive ? "active" : ""}`
-                            }
+                            className={getLinkClass}
+                            onClick={closeMenu}
                         >
                             Login
                         </NavLink>
 
                         <NavLink
                             to="/register"
-                            className={({ isActive }) =>
-                                `navbar-link ${isActive ? "active" : ""}`
-                            }
+                            className={getLinkClass}
+                            onClick={closeMenu}
                         >
                             Register
                         </NavLink>
@@ -77,9 +134,8 @@ function Navbar() {
                             <>
                                 <NavLink
                                     to="/products"
-                                    className={({ isActive }) =>
-                                        `navbar-link ${isActive ? "active" : ""}`
-                                    }
+                                    className={getLinkClass}
+                                    onClick={closeMenu}
                                 >
                                     Products
                                 </NavLink>
@@ -91,6 +147,7 @@ function Navbar() {
                                             isActive ? "active" : ""
                                         }`
                                     }
+                                    onClick={closeMenu}
                                 >
                                     Cart
                                     <span className="navbar-cart-count">
@@ -103,9 +160,8 @@ function Navbar() {
                         {user?.role !== "admin" && (
                             <NavLink
                                 to="/orders"
-                                className={({ isActive }) =>
-                                    `navbar-link ${isActive ? "active" : ""}`
-                                }
+                                className={getLinkClass}
+                                onClick={closeMenu}
                             >
                                 My Orders
                             </NavLink>
@@ -114,15 +170,14 @@ function Navbar() {
                         {user?.role === "admin" && (
                             <NavLink
                                 to="/admin/dashboard"
-                                className={({ isActive }) =>
-                                    `navbar-link ${isActive ? "active" : ""}`
-                                }
+                                className={getLinkClass}
+                                onClick={closeMenu}
                             >
                                 Dashboard
                             </NavLink>
                         )}
 
-                        {/* Account information */}
+                        {/* Account details */}
                         <div className="navbar-account">
                             <span className="navbar-account-avatar">
                                 {user?.email?.charAt(0)?.toUpperCase() || "U"}
