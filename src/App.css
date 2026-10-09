@@ -45,8 +45,10 @@ a {
 
 
 
+
 /* =========================================
    PRODUCTSHUB - PREMIUM RESPONSIVE NAVBAR
+   Purple background + white text
 ========================================= */
 
 .navbar {
@@ -61,6 +63,7 @@ a {
 
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     gap: 28px;
@@ -141,7 +144,6 @@ a {
 
 /* =========================================
    HAMBURGER BUTTON
-Hidden on desktop; shown on mobile
 ========================================= */
 
 .navbar-menu-toggle {
@@ -188,7 +190,7 @@ Hidden on desktop; shown on mobile
 }
 
 /* =========================================
-   DESKTOP NAVIGATION LINKS
+   DESKTOP NAVIGATION
 ========================================= */
 
 .navbar-links {
@@ -258,7 +260,7 @@ Hidden on desktop; shown on mobile
 }
 
 /* =========================================
-   CART COUNT
+   CART BADGE
 ========================================= */
 
 .navbar-cart-link {
@@ -284,7 +286,7 @@ Hidden on desktop; shown on mobile
 }
 
 /* =========================================
-   ACCOUNT DETAILS
+   USER ACCOUNT
 ========================================= */
 
 .navbar-account {
@@ -299,7 +301,6 @@ Hidden on desktop; shown on mobile
     padding: 7px 12px;
 
     background: rgba(255, 255, 255, 0.09);
-
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
 
@@ -409,7 +410,7 @@ Hidden on desktop; shown on mobile
 }
 
 /* =========================================
-   KEYBOARD ACCESSIBILITY
+   ACCESSIBILITY
 ========================================= */
 
 .navbar-link:focus-visible,
@@ -421,7 +422,7 @@ Hidden on desktop; shown on mobile
 
 /* =========================================
    TABLET AND MOBILE NAVBAR
-Logo LEFT + Hamburger RIGHT on SAME LINE
+   LOGO LEFT | MENU RIGHT | SAME LINE
 ========================================= */
 
 @media (max-width: 900px) {
@@ -432,6 +433,7 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
 
         width: 100%;
         min-height: 70px;
+        height: auto;
         box-sizing: border-box;
 
         display: flex;
@@ -440,13 +442,13 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
         align-items: center;
         justify-content: space-between;
 
-        padding: 10px 16px;
-        gap: 10px;
+        padding: 10px 20px;
+        gap: 12px;
 
         background: #4C1D95;
     }
 
-    /* Logo stays on the left */
+    /* LOGO: LEFT SIDE */
     .navbar .navbar-brand {
         display: inline-flex;
         flex-direction: row;
@@ -455,26 +457,29 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
 
         flex: 0 1 auto;
         min-width: 0;
-        gap: 8px;
+        max-width: calc(100% - 58px);
 
+        gap: 8px;
         margin: 0;
         padding: 0;
+
+        text-align: left;
         line-height: 1;
     }
 
     .navbar .navbar-brand-icon {
-        width: 38px;
-        height: 38px;
-        flex: 0 0 38px;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
 
         margin: 0;
-        border-radius: 10px;
+        border-radius: 11px;
     }
 
     .navbar .navbar-brand-icon svg {
         display: block;
-        width: 22px;
-        height: 22px;
+        width: 23px;
+        height: 23px;
     }
 
     .navbar .navbar-brand-text {
@@ -483,13 +488,15 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
         margin: 0;
         padding: 0;
 
-        font-size: clamp(18px, 4.5vw, 23px);
+        font-size: clamp(18px, 5vw, 23px);
         line-height: 1.15;
-        letter-spacing: -0.6px;
+        letter-spacing: -0.7px;
+
+        text-align: left;
         white-space: nowrap;
     }
 
-    /* Hamburger stays on the right, same row */
+    /* HAMBURGER: RIGHT SIDE, SAME ROW */
     .navbar .navbar-menu-toggle {
         display: inline-flex;
         align-items: center;
@@ -509,11 +516,7 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
         height: 23px;
     }
 
-    /*
-      Mobile dropdown:
-      position:absolute means it won't push
-      the logo or hamburger onto another line.
-    */
+    /* MOBILE DROPDOWN */
     .navbar .navbar-links {
         display: none;
 
@@ -528,7 +531,7 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
         box-sizing: border-box;
 
         margin: 0;
-        padding: 14px 16px 20px;
+        padding: 14px 20px 20px;
 
         flex-direction: column;
         flex-wrap: nowrap;
@@ -548,12 +551,11 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
         box-shadow: 0 12px 24px rgba(30, 10, 65, 0.25);
     }
 
-    /* Opened by the React state */
     .navbar .navbar-links.mobile-open {
         display: flex;
     }
 
-    /* Full-width menu links */
+    /* MOBILE MENU LINKS */
     .navbar .navbar-links .navbar-link {
         display: flex;
         align-items: center;
@@ -582,9 +584,10 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
         transform: translateY(50%);
     }
 
-    /* Account panel inside dropdown */
+    /* ACCOUNT INSIDE THE MENU */
     .navbar .navbar-account {
         display: flex;
+        flex-direction: row;
         align-items: center;
 
         width: 100%;
@@ -594,8 +597,6 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
 
         margin: 8px 0 4px;
         padding: 11px;
-
-        border-radius: 10px;
     }
 
     .navbar .navbar-account-avatar {
@@ -618,7 +619,7 @@ Logo LEFT + Hamburger RIGHT on SAME LINE
         font-size: 12px;
     }
 
-    /* Full-width logout in dropdown */
+    /* LOGOUT INSIDE THE MENU */
     .navbar .navbar-logout {
         display: inline-flex;
         align-items: center;
