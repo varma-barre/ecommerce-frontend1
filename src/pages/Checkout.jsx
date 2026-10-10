@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -8,10 +9,6 @@ function Checkout() {
   const { cart, cartTotal } = useCart();
   const { token } = useAuth();
   const navigate = useNavigate();
-
-  // =====================================================
-  // FORM DATA
-  // =====================================================
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,55 +20,111 @@ function Checkout() {
     paymentMethod: "COD",
   });
 
-  // =====================================================
-  // VALIDATION ERRORS
-  // =====================================================
-
   const [errors, setErrors] = useState({});
-
-  // General API/server error
   const [error, setError] = useState("");
-
-  // Loading state
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
 
+  // Load the current user's saved profile and default address.
+  useEffect(() => {
+    let cancelled = false;
 
-  // =====================================================
-  // HANDLE INPUT CHANGE
-  // =====================================================
+    const fetchSavedProfile = async () => {
+      if (!token) {
+        setProfileLoading(false);
+        setError("Please log in before proceeding to checkout.");
+        return;
+      }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+      try {
+        setProfileLoading(true);
+        setError("");
 
-    setFormData((prev) => ({
-      ...prev,
+        const response = await fetch(
+          `${API_URL}/api/auth/profile`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Unable to load your saved profile."
+          );
+        }
+
+        if (cancelled) return;
+
+        const user = data.user || {};
+        const address = user.defaultAddress || {};
+
+        setFormData((previous) => ({
+          ...previous,
+          name: user.name || previous.name,
+          phone: user.phone || previous.phone,
+          address: address.address || previous.address,
+          city: address.city || previous.city,
+          state: address.state || previous.state,
+          pincode: address.pincode || previous.pincode,
+        }));
+      } catch (fetchError) {
+        if (!cancelled) {
+          console.error(
+            "Failed to load saved profile:",
+            fetchError
+          );
+
+          setError(
+            fetchError.message ||
+              "Could not load saved delivery details."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    fetchSavedProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  // Handle delivery and payment field changes.
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((previous) => ({
+      ...previous,
       [name]: value,
     }));
 
-    // Remove error for the field user is correcting
-    setErrors((prev) => ({
-      ...prev,
+    setErrors((previous) => ({
+      ...previous,
       [name]: "",
     }));
 
-    // Remove general error
     setError("");
   };
 
-
-  // =====================================================
-  // VALIDATE FORM
-  // =====================================================
-
+  // Validate the checkout form.
   const validateForm = () => {
     const newErrors = {};
 
-
-    // -----------------------------------------------------
-    // FULL NAME
-    // -----------------------------------------------------
-
     const name = formData.name.trim();
+    const phone = formData.phone.trim();
+    const address = formData.address.trim();
+    const city = formData.city.trim();
+    const state = formData.state.trim();
+    const pincode = formData.pincode.trim();
 
     if (!name) {
       newErrors.name = "Full name is required";
@@ -80,26 +133,12 @@ function Checkout() {
         "Full name must contain at least 3 characters";
     }
 
-
-    // -----------------------------------------------------
-    // PHONE NUMBER
-    // -----------------------------------------------------
-
-    const phone = formData.phone.trim();
-
     if (!phone) {
       newErrors.phone = "Phone number is required";
     } else if (!/^[6-9]\d{9}$/.test(phone)) {
       newErrors.phone =
         "Enter a valid 10-digit phone number";
     }
-
-
-    // -----------------------------------------------------
-    // ADDRESS
-    // -----------------------------------------------------
-
-    const address = formData.address.trim();
 
     if (!address) {
       newErrors.address = "Address is required";
@@ -108,40 +147,17 @@ function Checkout() {
         "Please enter a complete address";
     }
 
-
-    // -----------------------------------------------------
-    // CITY
-    // -----------------------------------------------------
-
-    const city = formData.city.trim();
-
     if (!city) {
       newErrors.city = "City is required";
     } else if (city.length < 2) {
-      newErrors.city =
-        "Please enter a valid city";
+      newErrors.city = "Please enter a valid city";
     }
-
-
-    // -----------------------------------------------------
-    // STATE
-    // -----------------------------------------------------
-
-    const state = formData.state.trim();
 
     if (!state) {
       newErrors.state = "State is required";
     } else if (state.length < 2) {
-      newErrors.state =
-        "Please enter a valid state";
+      newErrors.state = "Please enter a valid state";
     }
-
-
-    // -----------------------------------------------------
-    // PINCODE
-    // -----------------------------------------------------
-
-    const pincode = formData.pincode.trim();
 
     if (!pincode) {
       newErrors.pincode = "Pincode is required";
@@ -150,59 +166,40 @@ function Checkout() {
         "Pincode must contain exactly 6 digits";
     }
 
-
-    // -----------------------------------------------------
-    // PAYMENT METHOD
-    // -----------------------------------------------------
-
     if (!formData.paymentMethod) {
       newErrors.paymentMethod =
         "Please select a payment method";
     }
 
-
-    // Save validation errors
     setErrors(newErrors);
 
-    // Return true only when there are no errors
     return Object.keys(newErrors).length === 0;
   };
 
+  // Place the order using the existing orders API.
+  const handlePlaceOrder = async (event) => {
+    event.preventDefault();
 
-  // =====================================================
-  // PLACE ORDER
-  // =====================================================
-
-  const handlePlaceOrder = async (e) => {
-    e.preventDefault();
-
-    // Clear previous general error
     setError("");
 
-    // -----------------------------------------------------
-    // CHECK EMPTY CART
-    // -----------------------------------------------------
+    if (!token) {
+      setError("Please log in before placing your order.");
+      return;
+    }
+
+    if (profileLoading) {
+      setError("Please wait while your delivery details load.");
+      return;
+    }
 
     if (cart.length === 0) {
       setError("Your cart is empty.");
       return;
     }
 
-
-    // -----------------------------------------------------
-    // VALIDATE FORM
-    // -----------------------------------------------------
-
-    const isValid = validateForm();
-
-    if (!isValid) {
+    if (!validateForm()) {
       return;
     }
-
-
-    // -----------------------------------------------------
-    // CREATE SHIPPING ADDRESS
-    // -----------------------------------------------------
 
     const shippingAddress = `
 ${formData.name.trim()}
@@ -212,24 +209,17 @@ ${formData.city.trim()}, ${formData.state.trim()}
 Pincode: ${formData.pincode.trim()}
     `.trim();
 
-
-    // -----------------------------------------------------
-    // SEND ORDER TO BACKEND
-    // -----------------------------------------------------
-
     try {
       setLoading(true);
 
       const response = await fetch(
-        "${API_URL/api/orders",
+        `${API_URL}/api/orders`,
         {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify({
             shippingAddress,
             paymentMethod: formData.paymentMethod,
@@ -237,17 +227,7 @@ Pincode: ${formData.pincode.trim()}
         }
       );
 
-
-      // ---------------------------------------------------
-      // READ BACKEND RESPONSE
-      // ---------------------------------------------------
-
       const data = await response.json();
-
-
-      // ---------------------------------------------------
-      // HANDLE API ERROR
-      // ---------------------------------------------------
 
       if (!response.ok) {
         throw new Error(
@@ -255,82 +235,59 @@ Pincode: ${formData.pincode.trim()}
         );
       }
 
-
-      // ---------------------------------------------------
-      // SAVE ORDER FOR CONFIRMATION PAGE
-      // ---------------------------------------------------
+      if (!data.order?._id) {
+        throw new Error(
+          "The order was submitted, but no order ID was returned."
+        );
+      }
 
       localStorage.setItem(
         "lastOrder",
         JSON.stringify(data.order)
       );
 
-
-      // ---------------------------------------------------
-      // GO TO ORDER CONFIRMATION
-      // ---------------------------------------------------
-
       navigate(`/order-confirmation/${data.order._id}`);
-
-    } catch (error) {
-      console.error("Order error:", error);
+    } catch (orderError) {
+      console.error("Order error:", orderError);
 
       setError(
-        error.message ||
-        "Something went wrong while placing the order."
+        orderError.message ||
+          "Something went wrong while placing the order."
       );
-
     } finally {
       setLoading(false);
     }
   };
 
-
-  // =====================================================
-  // JSX
-  // =====================================================
-
   return (
     <div className="checkout-page">
-
       <h1>Checkout</h1>
 
-
-      {/* =================================================
-          GENERAL ERROR
-      ================================================= */}
-
       {error && (
-        <div className="checkout-error">
+        <div className="checkout-error" role="alert">
           {error}
         </div>
       )}
 
+      {profileLoading && (
+        <p className="checkout-loading">
+          Loading your saved delivery details...
+        </p>
+      )}
 
       <div className="checkout-container">
-
-
-        {/* =================================================
-            ORDER SUMMARY
-        ================================================= */}
-
+        {/* ORDER SUMMARY */}
         <div className="checkout-summary">
-
           <h2>Order Summary</h2>
 
-
           {cart.map((item) => {
-            console.log("Checkout cart item:", item);
-
-            const itemTotal =
-              item.price * item.quantity;
+            const itemTotal = item.price * item.quantity;
 
             return (
               <div
                 className="checkout-item"
                 key={item._id}
               >
-
                 <div className="checkout-item-info">
                   <img
                     src={item.image}
@@ -339,123 +296,90 @@ Pincode: ${formData.pincode.trim()}
                   />
 
                   <div className="checkout-item-details">
-                     <h3>{item.name}</h3>
-                     <p>Price: ₹{item.price}</p>
-                     <p>Quantity: {item.quantity}</p>
+                    <h3>{item.name}</h3>
+                    <p>Price: ₹{item.price}</p>
+                    <p>Quantity: {item.quantity}</p>
                   </div>
-               </div>
-
-                <div className="checkout-item-total">
-
-                  ₹{itemTotal}
-
                 </div>
 
+                <div className="checkout-item-total">
+                  ₹{itemTotal}
+                </div>
               </div>
             );
           })}
 
-
-          {/* TOTAL */}
-
           <div className="checkout-total">
-
-            <span>
-              Overall Total
-            </span>
-
-            <strong>
-              ₹{cartTotal}
-            </strong>
-
+            <span>Overall Total</span>
+            <strong>₹{cartTotal}</strong>
           </div>
-
         </div>
 
-
-        {/* =================================================
-            DELIVERY INFORMATION FORM
-        ================================================= */}
-
+        {/* DELIVERY INFORMATION */}
         <form
           className="checkout-form"
           onSubmit={handlePlaceOrder}
         >
-
           <h2>Delivery Information</h2>
 
-
-          {/* =================================================
-              FULL NAME
-          ================================================= */}
-
           <div className="form-group">
-
-            <label>
+            <label htmlFor="checkout-name">
               Full Name
             </label>
 
             <input
+              id="checkout-name"
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
               placeholder="Enter your full name"
+              autoComplete="name"
+              required
             />
 
             {errors.name && (
-              <p className="field-error">
-                {errors.name}
-              </p>
+              <p className="field-error">{errors.name}</p>
             )}
-
           </div>
 
-
-          {/* =================================================
-              PHONE
-          ================================================= */}
-
           <div className="form-group">
-
-            <label>
+            <label htmlFor="checkout-phone">
               Phone Number
             </label>
 
             <input
+              id="checkout-phone"
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
               placeholder="Enter 10-digit phone number"
-              maxLength="10"
+              autoComplete="tel"
+              maxLength={10}
+              inputMode="numeric"
+              required
             />
 
             {errors.phone && (
-              <p className="field-error">
-                {errors.phone}
-              </p>
+              <p className="field-error">{errors.phone}</p>
             )}
-
           </div>
 
-
-          {/* =================================================
-              ADDRESS
-          ================================================= */}
-
           <div className="form-group">
-
-            <label>
+            <label htmlFor="checkout-address">
               Address
             </label>
 
             <textarea
+              id="checkout-address"
               name="address"
               value={formData.address}
               onChange={handleChange}
               placeholder="House number, street, area"
-              rows="3"
+              rows={3}
+              autoComplete="street-address"
+              required
             />
 
             {errors.address && (
@@ -463,87 +387,64 @@ Pincode: ${formData.pincode.trim()}
                 {errors.address}
               </p>
             )}
-
           </div>
 
-
-          {/* =================================================
-              CITY + STATE
-          ================================================= */}
-
           <div className="form-row">
-
-
-            {/* CITY */}
-
             <div className="form-group">
-
-              <label>
-                City
-              </label>
+              <label htmlFor="checkout-city">City</label>
 
               <input
+                id="checkout-city"
                 type="text"
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
                 placeholder="Enter city"
+                autoComplete="address-level2"
+                required
               />
 
               {errors.city && (
-                <p className="field-error">
-                  {errors.city}
-                </p>
+                <p className="field-error">{errors.city}</p>
               )}
-
             </div>
 
-
-            {/* STATE */}
-
             <div className="form-group">
-
-              <label>
-                State
-              </label>
+              <label htmlFor="checkout-state">State</label>
 
               <input
+                id="checkout-state"
                 type="text"
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
                 placeholder="Enter state"
+                autoComplete="address-level1"
+                required
               />
 
               {errors.state && (
-                <p className="field-error">
-                  {errors.state}
-                </p>
+                <p className="field-error">{errors.state}</p>
               )}
-
             </div>
-
           </div>
 
-
-          {/* =================================================
-              PINCODE
-          ================================================= */}
-
           <div className="form-group">
-
-            <label>
+            <label htmlFor="checkout-pincode">
               Pincode
             </label>
 
             <input
+              id="checkout-pincode"
               type="text"
               name="pincode"
               value={formData.pincode}
               onChange={handleChange}
               placeholder="Enter 6-digit pincode"
-              maxLength="6"
+              autoComplete="postal-code"
+              maxLength={6}
               inputMode="numeric"
+              required
             />
 
             {errors.pincode && (
@@ -551,84 +452,62 @@ Pincode: ${formData.pincode.trim()}
                 {errors.pincode}
               </p>
             )}
-
           </div>
 
-
-          {/* =================================================
-              PAYMENT METHOD
-          ================================================= */}
-
-         <div className="form-group payment-method-group">
+          {/* PAYMENT METHOD */}
+          <div className="form-group payment-method-group">
             <label>Payment Method</label>
 
-               <div className="payment-options">
+            <div className="payment-options">
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  checked={formData.paymentMethod === "COD"}
+                  onChange={handleChange}
+                />
+                <span>Cash on Delivery</span>
+              </label>
 
-                <label className="payment-option">
-                  <input
-                     type="radio"
-                     name="paymentMethod"
-                     value="COD"
-                     checked={formData.paymentMethod === "COD"}
-                     onChange={handleChange}
-                   />
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="UPI"
+                  checked={formData.paymentMethod === "UPI"}
+                  onChange={handleChange}
+                />
+                <span>UPI</span>
+              </label>
 
-                     <span>Cash on Delivery</span>
-                </label>
+              <label className="payment-option">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="CARD"
+                  checked={formData.paymentMethod === "CARD"}
+                  onChange={handleChange}
+                />
+                <span>Card</span>
+              </label>
+            </div>
 
-            <label className="payment-option">
-                  <input
-                     type="radio"
-                     name="paymentMethod"
-                     value="UPI"
-                     checked={formData.paymentMethod === "UPI"}
-                     onChange={handleChange}
-                   />
-
-                      <span>UPI</span>
-            </label>
-
-                <label className="payment-option">
-                     <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="CARD"
-                        checked={formData.paymentMethod === "CARD"}
-                        onChange={handleChange}
-                     />
-
-                       <span>Card</span>
-                </label>
-
-         </div>
-
-  {errors.paymentMethod && (
-    <p className="field-error">
-      {errors.paymentMethod}
-    </p>
-  )}
-</div>
-
-
-          {/* =================================================
-              PLACE ORDER
-          ================================================= */}
+            {errors.paymentMethod && (
+              <p className="field-error">
+                {errors.paymentMethod}
+              </p>
+            )}
+          </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || profileLoading || !token}
           >
-
-            {loading
-              ? "Placing Order..."
-              : "Place Order"}
-
+            {loading ? "Placing Order..." : "Place Order"}
           </button>
-
         </form>
-
       </div>
-
     </div>
   );
 }

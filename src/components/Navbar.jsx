@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -10,18 +10,55 @@ function Navbar() {
     const navigate = useNavigate();
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
+    const profileMenuRef = useRef(null);
+
+    // Close profile dropdown when clicking outside or pressing Escape.
+    useEffect(() => {
+        const handlePointerDown = (event) => {
+            if (
+                profileMenuRef.current &&
+                !profileMenuRef.current.contains(event.target)
+            ) {
+                setIsProfileMenuOpen(false);
+            }
+        };
+
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                setIsProfileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handlePointerDown);
+        document.addEventListener("touchstart", handlePointerDown);
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("mousedown", handlePointerDown);
+            document.removeEventListener("touchstart", handlePointerDown);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    // Close mobile navigation.
     const closeMenu = () => {
         setIsMobileMenuOpen(false);
     };
 
+    // Toggle mobile navigation.
     const toggleMenu = () => {
         setIsMobileMenuOpen((open) => !open);
     };
 
+    // Logout and return to Home.
     const handleLogout = () => {
-        closeMenu();
+        setIsProfileMenuOpen(false);
+        setIsMobileMenuOpen(false);
+
         logout();
+
         navigate("/home", { replace: true });
     };
 
@@ -33,8 +70,9 @@ function Navbar() {
 
     return (
         <>
-            {/* TOP NAVBAR */}
+            {/* ================= TOP NAVBAR ================= */}
             <nav className="navbar">
+                {/* BRAND */}
                 <Link
                     to="/home"
                     className="navbar-brand"
@@ -102,7 +140,7 @@ function Navbar() {
                     )}
                 </button>
 
-                {/* DESKTOP LINKS / MOBILE DROPDOWN */}
+                {/* NAVIGATION LINKS */}
                 <div
                     id="products-hub-navigation"
                     className={`navbar-links ${
@@ -117,6 +155,7 @@ function Navbar() {
                         Home
                     </NavLink>
 
+                    {/* GUEST LINKS */}
                     {!isLoggedIn && (
                         <>
                             <NavLink
@@ -137,8 +176,10 @@ function Navbar() {
                         </>
                     )}
 
+                    {/* AUTHENTICATED USER LINKS */}
                     {isLoggedIn && (
                         <>
+                            {/* CUSTOMER PRODUCTS AND CART */}
                             {user?.role === "user" && (
                                 <>
                                     <NavLink
@@ -159,6 +200,7 @@ function Navbar() {
                                         onClick={closeMenu}
                                     >
                                         Cart
+
                                         <span className="navbar-cart-count">
                                             {cartCount}
                                         </span>
@@ -166,16 +208,8 @@ function Navbar() {
                                 </>
                             )}
 
-                            {user?.role !== "admin" && (
-                                <NavLink
-                                    to="/orders"
-                                    className={getLinkClass}
-                                    onClick={closeMenu}
-                                >
-                                    My Orders
-                                </NavLink>
-                            )}
-
+                           
+                            {/* ADMIN DASHBOARD */}
                             {user?.role === "admin" && (
                                 <NavLink
                                     to="/admin/dashboard"
@@ -186,54 +220,180 @@ function Navbar() {
                                 </NavLink>
                             )}
 
-                            <div className="navbar-account">
-                                <span className="navbar-account-avatar">
-                                    {user?.email?.charAt(0)?.toUpperCase() || "U"}
-                                </span>
-
-                                <div className="navbar-account-details">
-                                    <span className="navbar-account-email">
-                                        {user?.email}
-                                    </span>
-
-                                    <span className="navbar-account-role">
-                                        {user?.role === "admin"
-                                            ? "Administrator"
-                                            : "Customer account"}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <button
-                                type="button"
-                                className="navbar-logout"
-                                onClick={handleLogout}
+                            {/* ================= PROFILE DROPDOWN ================= */}
+                            <div
+                                className="navbar-profile"
+                                ref={profileMenuRef}
                             >
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    aria-hidden="true"
+                                {/* PROFILE TRIGGER */}
+                                <button
+                                    type="button"
+                                    className={`navbar-account ${
+                                        isProfileMenuOpen ? "is-open" : ""
+                                    }`}
+                                    onClick={() =>
+                                        setIsProfileMenuOpen((open) => !open)
+                                    }
+                                    aria-haspopup="menu"
+                                    aria-expanded={isProfileMenuOpen}
+                                    aria-label="Open account menu"
                                 >
-                                    <path d="M10 17l5-5-5-5" />
-                                    <path d="M15 12H3" />
-                                    <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
-                                </svg>
-                                Logout
-                            </button>
+                                    <span className="navbar-account-avatar">
+                                        {user?.email
+                                            ?.charAt(0)
+                                            ?.toUpperCase() || "U"}
+                                    </span>
+
+                                    <span className="navbar-account-details">
+                                        <span className="navbar-account-email">
+                                            {user?.email || "My Account"}
+                                        </span>
+
+                                        <span className="navbar-account-role">
+                                            {user?.role === "admin"
+                                                ? "Administrator"
+                                                : user?.name || "Customer"}
+                                        </span>
+                                    </span>
+
+                                    <svg
+                                        className="navbar-account-chevron"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="m7 10 5 5 5-5" />
+                                    </svg>
+                                </button>
+
+                                {/* DROPDOWN CONTENT */}
+                                {isProfileMenuOpen && (
+                                    <div
+                                        className="navbar-profile-dropdown"
+                                        role="menu"
+                                        aria-label="Account menu"
+                                    >
+                                        {/* ACCOUNT INFORMATION */}
+                                        <div className="navbar-dropdown-heading">
+                                            <span className="navbar-dropdown-eyebrow">
+                                                SIGNED IN AS
+                                            </span>
+
+                                            <span className="navbar-dropdown-email">
+                                                {user?.email || "User"}
+                                            </span>
+
+                                            <span className="navbar-dropdown-role">
+                                                {user?.role === "admin"
+                                                    ? "Administrator"
+                                                    : user?.name || "Customer"}
+                                            </span>
+                                        </div>
+
+                                        <div className="navbar-dropdown-divider" />
+
+                                        {/* MY PROFILE */}
+                                        <Link
+                                            to="/profile"
+                                            className="navbar-dropdown-item"
+                                            role="menuitem"
+                                            onClick={() => {
+                                                setIsProfileMenuOpen(false);
+                                                closeMenu();
+                                            }}
+                                        >
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.8"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                aria-hidden="true"
+                                            >
+                                                <circle
+                                                    cx="12"
+                                                    cy="8"
+                                                    r="4"
+                                                />
+                                                <path d="M4 21a8 8 0 0 1 16 0" />
+                                            </svg>
+
+                                            <span>My Profile</span>
+                                        </Link>
+
+                                        {/* MY ORDERS */}
+                                        {user?.role !== "admin" && (
+                                            <Link
+                                                to="/orders"
+                                                className="navbar-dropdown-item"
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    setIsProfileMenuOpen(false);
+                                                    closeMenu();
+                                                }}
+                                            >
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.8"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path d="M6 3h9l4 4v14H6z" />
+                                                    <path d="M14 3v5h5" />
+                                                    <path d="M9 13h7M9 17h7" />
+                                                </svg>
+
+                                                <span>My Orders</span>
+                                            </Link>
+                                        )}
+
+                                        <div className="navbar-dropdown-divider" />
+
+                                        {/* LOGOUT */}
+                                        <button
+                                            type="button"
+                                            className="navbar-dropdown-logout"
+                                            role="menuitem"
+                                            onClick={handleLogout}
+                                        >
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                aria-hidden="true"
+                                            >
+                                                <path d="M10 17l5-5-5-5" />
+                                                <path d="M15 12H3" />
+                                                <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
+                                            </svg>
+
+                                            <span>Logout</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </>
                     )}
                 </div>
             </nav>
 
-            {/* MOBILE FIXED BOTTOM NAVIGATION */}
+            {/* ================= MOBILE BOTTOM NAVIGATION ================= */}
             <nav
                 className="mobile-bottom-nav"
                 aria-label="Mobile navigation"
             >
+                {/* HOME */}
                 <NavLink
                     to="/home"
                     className={getBottomLinkClass}
@@ -247,6 +407,7 @@ function Navbar() {
                     <span>Home</span>
                 </NavLink>
 
+                {/* SHOP */}
                 {user?.role !== "admin" && (
                     <NavLink
                         to="/products"
@@ -261,6 +422,7 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* CART */}
                 {isLoggedIn && user?.role === "user" && (
                     <NavLink
                         to="/cart"
@@ -272,6 +434,7 @@ function Navbar() {
                             <circle cx="10" cy="21" r="1" />
                             <circle cx="19" cy="21" r="1" />
                         </svg>
+
                         <span>Cart</span>
 
                         {cartCount > 0 && (
@@ -282,6 +445,7 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* ORDERS */}
                 {isLoggedIn && user?.role !== "admin" && (
                     <NavLink
                         to="/orders"
@@ -297,6 +461,7 @@ function Navbar() {
                     </NavLink>
                 )}
 
+                {/* ACCOUNT / MOBILE MENU */}
                 <button
                     type="button"
                     className={`mobile-bottom-link ${

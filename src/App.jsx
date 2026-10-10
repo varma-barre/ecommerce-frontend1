@@ -48,6 +48,8 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminOrders from "./pages/AdminOrders";
 import AdminOrderDetails from "./pages/AdminOrderDetails";
 
+import Profile from "./pages/Profile";
+
 
 /* =========================================
    CSS
@@ -345,6 +347,15 @@ function AppContent() {
                         <Checkout />
                     }
                 />
+
+                <Route
+    path="/profile"
+    element={
+        <ProtectedRoute>
+            <Profile />
+        </ProtectedRoute>
+    }
+/>
 
 
                 {/* =================================
