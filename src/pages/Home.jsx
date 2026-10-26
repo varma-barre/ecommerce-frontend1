@@ -13,7 +13,7 @@ function Home() {
         <div className="home-hero-content">
 
           <span className="home-badge">
-            WELCOME TO MYSTORE
+            WELCOME TO PRODUCTSHUB
           </span>
 
           <h1>
