@@ -386,7 +386,7 @@ function Login() {
             {/* MOBILE LOGO */}
 
             <div className="login-mobile-logo">
-              MyStore
+              ProductsHub
             </div>
 
 
